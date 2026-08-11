@@ -319,12 +319,96 @@ class Solution:
     title: "Longest Consecutive Sequence",
     titleZh: "最长连续序列",
     difficulty: "Medium",
-    topics: ["集合", "数组"],
-    date: "QUEUE",
-    status: "planned",
-    statusLabel: "题单中",
-    note: "不排序，怎样只从一段连续序列的起点出发？",
+    topics: ["集合", "哈希表", "数组"],
+    date: "2026.08.11",
+    status: "completed",
+    statusLabel: "已拆解",
+    note: "把所有数字放进集合，只从没有前驱的数字开始向右扩展。",
     slug: "128-longest-consecutive-sequence",
+    article: {
+      subtitle: "找到数值连续链的唯一入口，只让每个数字被经过一次",
+      readTime: "9 MIN READ",
+      focus: "FOUNDATION FIRST · 哈希集合与起点剪枝",
+      focusTag: "set",
+      focusDescription:
+        "用集合快速判断数字是否存在，再用“前驱不存在”识别每段连续序列的起点。",
+      essence:
+        "给出一个无序数组，寻找最长的数值连续序列。这里的“连续”描述数值关系，与数组下标无关。真正决定线性解法的问题是：怎样避免从一段序列里的每个数字重复向右扫描？答案是只允许没有前驱的数字启动扩展。",
+      equation: {
+        currentLabel: "当前数字",
+        current: "num",
+        operator: "−",
+        neededLabel: "前驱偏移",
+        needed: "1",
+        relation: "∉",
+        target: "num_set",
+      },
+      foundation: {
+        name: "哈希集合是什么？",
+        definition:
+          "集合（set）用于保存互不重复的元素。Python 的集合通常基于哈希实现，因此平均情况下，插入元素和判断某个元素是否存在都可以在 O(1) 时间完成。",
+        mapping:
+          "在这道题里，num_set 像一张只记录“谁出现过”的名单。我们不需要数字对应的下标或其他信息，只需快速询问 num−1、num+1 是否在名单中。",
+      },
+      initialApproach: {
+        label: "SORT & SCAN / 最初直觉",
+        title: "先排序，再扫描相邻数字",
+        description:
+          "排序后，相邻的数值会排在一起，跳过重复值并统计连续长度即可得到答案。这个方法清晰可靠，但排序本身需要 O(n log n)，没有达到题目要求的线性时间。",
+        complexity: "时间 O(n log n) · 额外空间视排序实现而定",
+      },
+      optimizedApproach: {
+        label: "HASH SET / 思路转换",
+        title: "只从每段连续序列的最小值出发",
+        description:
+          "先把所有数字放进集合。若 num−1 仍在集合中，num 位于某段序列内部，直接跳过；只有 num−1 不存在时才从 num 向右寻找 num+1、num+2……。每段序列只会从唯一的起点扫描一次。",
+        complexity: "平均时间 O(n) · 空间 O(n)",
+      },
+      code: \`from typing import List
+
+class Solution:
+    def longestConsecutive(self, nums: List[int]) -> int:
+        num_set = set(nums)
+        longest = 0
+
+        for num in num_set:
+            if num - 1 not in num_set:
+                current_num = num
+                current_length = 1
+
+                while current_num + 1 in num_set:
+                    current_num += 1
+                    current_length += 1
+
+                longest = max(longest, current_length)
+
+        return longest\`,
+      codeTitle: "哈希集合 + 起点剪枝的 Python 实现",
+      syntaxNote:
+        "set(nums) 会去掉重复数字；x in num_set 平均 O(1) 判断 x 是否存在。只需要存在性时，set 比“数字 → 其他信息”的 dict 更贴合语义。",
+      takeaways: [
+        {
+          title: "先辨认“连续”描述什么。",
+          detail:
+            "本题关心数值是否相差 1，不要求这些数字在原数组中相邻，因此不应把它当作连续子数组或滑动窗口问题。",
+        },
+        {
+          title: "只让边界启动扫描。",
+          detail:
+            "num−1 不存在，才能证明 num 是这段连续序列的最小值。核心判断是 if num - 1 not in num_set。",
+        },
+        {
+          title: "嵌套循环不必然是 O(n²)。",
+          detail:
+            "while 只从每段序列的唯一入口启动；所有 while 合起来，每个不同数字至多被向右经过一次，因此总工作量仍是 O(n)。",
+        },
+        {
+          title: "根据所需信息选择哈希容器。",
+          detail:
+            "两数之和需要保存“数字 → 下标”，所以使用 dict；本题只询问数字是否存在，使用 set 更直接。",
+        },
+      ],
+    },
   },
 ];
 
