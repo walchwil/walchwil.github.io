@@ -364,7 +364,7 @@ class Solution:
           "先把所有数字放进集合。若 num−1 仍在集合中，num 位于某段序列内部，直接跳过；只有 num−1 不存在时才从 num 向右寻找 num+1、num+2……。每段序列只会从唯一的起点扫描一次。",
         complexity: "平均时间 O(n) · 空间 O(n)",
       },
-      code: \`from typing import List
+      code: `from typing import List
 
 class Solution:
     def longestConsecutive(self, nums: List[int]) -> int:
@@ -382,7 +382,7 @@ class Solution:
 
                 longest = max(longest, current_length)
 
-        return longest\`,
+        return longest`,
       codeTitle: "哈希集合 + 起点剪枝的 Python 实现",
       syntaxNote:
         "set(nums) 会去掉重复数字；x in num_set 平均 O(1) 判断 x 是否存在。只需要存在性时，set 比“数字 → 其他信息”的 dict 更贴合语义。",
@@ -406,6 +406,104 @@ class Solution:
           title: "根据所需信息选择哈希容器。",
           detail:
             "两数之和需要保存“数字 → 下标”，所以使用 dict；本题只询问数字是否存在，使用 set 更直接。",
+        },
+      ],
+    },
+  },
+  {
+    id: "322",
+    title: "Coin Change",
+    titleZh: "零钱兑换",
+    difficulty: "Medium",
+    topics: ["动态规划", "完全背包", "数组"],
+    date: "2026.08.11",
+    status: "completed",
+    statusLabel: "已拆解",
+    note: "保存每个金额的最少硬币数，枚举最后一枚硬币复用较小金额的最优答案。",
+    slug: "322-coin-change",
+    article: {
+      subtitle: "枚举最后一枚硬币，让大金额复用小金额的最优答案",
+      readTime: "12 MIN READ",
+      focus: "FOUNDATION FIRST · 动态规划与完全背包",
+      focusTag: "dp",
+      focusDescription:
+        "用 dp[x] 保存恰好凑出金额 x 的最少硬币数，把重复搜索变成从小到大的查表。",
+      essence:
+        "给定若干种可以无限使用的硬币，求恰好凑出目标金额所需的最少硬币数。真正决定解法的问题是：如果已经知道所有较小金额的最优答案，怎样通过枚举最后一枚硬币得到当前金额的最优答案？",
+      equation: {
+        currentLabel: "较小金额",
+        current: "dp[x−coin]",
+        operator: "+",
+        neededLabel: "最后一枚",
+        needed: "1",
+        relation: "→ min",
+        target: "dp[x]",
+      },
+      foundation: {
+        name: "动态规划与完全背包是什么？",
+        definition:
+          "动态规划把原问题拆成相互重叠的子问题，并保存已经计算过的答案以避免重复计算。完全背包表示每种物品可以选择任意多次；本题中的每种硬币都可以无限使用。",
+        mapping:
+          "把金额 0 到 amount 想成一张答案表：dp[x] 表示恰好凑出 x 所需的最少硬币数。硬币面值是一次选择所增加的金额，dp[x−coin] 是放入最后一枚 coin 之前已经解决的小问题。",
+      },
+      initialApproach: {
+        label: "BACKTRACKING / 最初直觉",
+        title: "为每个剩余金额尝试所有硬币",
+        description:
+          "递归地减去每一种不超过剩余金额的硬币，确实可以枚举全部方案。但相同的剩余金额会从不同路径反复出现，递归树因此快速膨胀。",
+        complexity: "时间指数级 · 递归栈最坏 O(amount)",
+      },
+      optimizedApproach: {
+        label: "DP / 思路转换",
+        title: "保存小金额答案，只枚举最后一枚硬币",
+        description:
+          "定义 dp[x] 为恰好凑出 x 的最少硬币数。计算 x 时，枚举最后使用的 coin，用 dp[x−coin]+1 形成候选答案并取最小值。由于 x−coin 小于 x，按金额从小到大即可复用已经算好的状态。",
+        complexity: "时间 O(amount · n) · 空间 O(amount)",
+      },
+      code: `from typing import List
+
+class Solution:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        dp = [float("inf")] * (amount + 1)
+        dp[0] = 0
+
+        for current in range(1, amount + 1):
+            for coin in coins:
+                if coin <= current:
+                    dp[current] = min(
+                        dp[current],
+                        dp[current - coin] + 1
+                    )
+
+        return dp[amount] if dp[amount] != float("inf") else -1`,
+      codeTitle: "一维动态规划的 Python 实现",
+      syntaxNote:
+        "float(\"inf\") 适合表示“目前无法凑出”，与正常数字取 min 时会被可行答案替换；range(1, amount + 1) 的右端不包含，因此要写 +1 才会计算目标金额。",
+      takeaways: [
+        {
+          title: "状态必须是一句完整的话。",
+          detail:
+            "dp[x] 表示“恰好凑出金额 x 所需的最少硬币数量”。“恰好”和“最少”共同决定初始化、转移和最终返回值。",
+        },
+        {
+          title: "组合问题可以枚举最后一次选择。",
+          detail:
+            "任何合法方案都有最后一枚硬币；去掉它以后，剩余部分自然变成 dp[x−coin] 这个更小的同类问题。",
+        },
+        {
+          title: "无穷大代表暂时不可达。",
+          detail:
+            "除 dp[0]=0 外，其余状态不能初始化为 0，否则程序会误以为所有金额都能不使用硬币凑出。最终仍为无穷大时返回 −1。",
+        },
+        {
+          title: "任意硬币体系不能默认贪心。",
+          detail:
+            "例如 coins=[1,3,4]、amount=6，优先拿最大硬币得到 4+1+1 三枚，而最优方案 3+3 只需两枚。",
+        },
+        {
+          title: "识别完全背包的触发器。",
+          detail:
+            "看到“每种选择可无限使用 + 恰好组成目标 + 求最少数量”，优先考虑以目标值为状态的一维动态规划。",
         },
       ],
     },
