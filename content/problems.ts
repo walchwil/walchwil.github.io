@@ -144,12 +144,88 @@ class Solution:
     title: "Group Anagrams",
     titleZh: "字母异位词分组",
     difficulty: "Medium",
-    topics: ["哈希表", "字符串"],
-    date: "NEXT",
-    status: "planned",
-    statusLabel: "待攻克",
-    note: "如何为一组字符设计稳定、可比较的身份？",
+    topics: ["哈希表", "字符串", "排序"],
+    date: "2026.08.11",
+    status: "completed",
+    statusLabel: "已拆解",
+    note: "不让单词两两比较；为每个单词生成同类共享的 key，再用哈希表分桶。",
     slug: "049-group-anagrams",
+    article: {
+      subtitle: "不让单词互相比较：先生成身份证，再按 key 分桶",
+      readTime: "10 MIN READ",
+      focus: "FOUNDATION FIRST · 哈希分组",
+      focusTag: "dict",
+      focusDescription: "先为同类元素设计相同 key，再让哈希表把它们送进同一个桶。",
+      essence:
+        "给出一批字符串，把互为字母异位词的字符串放进同一组。真正决定解法的问题不是怎样反复比较两个单词，而是怎样为每个单词生成一个与排列顺序无关、又保留字符种类和次数的分组身份证。",
+      equation: {
+        currentLabel: "当前单词",
+        current: "tea",
+        operator: "→ 排序 →",
+        neededLabel: "分组身份证",
+        needed: "aet",
+        relation: "→",
+        target: "groups[aet]",
+      },
+      foundation: {
+        name: "哈希表怎样用来分组？",
+        definition:
+          "哈希表是一种通过键（key）直接访问值（value）的数据结构，平均情况下查询和插入都是 O(1)。用于分组时，可以让 key 表示类别，让 value 保存属于该类别的全部元素。",
+        mapping:
+          "这道题里，哈希表像一排贴有标签的收纳箱：排序后的字符串是箱子标签，原始单词列表是箱子内容。eat、tea、ate 排序后都是 aet，因此会直接进入同一个箱子。",
+      },
+      initialApproach: {
+        label: "PAIRWISE CHECK / 最初直觉",
+        title: "让每个新单词与已有分组逐一比较",
+        description:
+          "可以把新单词依次与各组的代表单词排序后比较，再决定加入旧组还是创建新组。但字符串会被重复排序和比较，单词越多，重复工作越严重。",
+        complexity: "时间 O(n² · k log k) · 空间 O(nk)",
+      },
+      optimizedApproach: {
+        label: "CANONICAL KEY / 思路转换",
+        title: "每个单词只算一次身份证，然后直接进桶",
+        description:
+          "把每个单词排序后的结果作为标准 key。字母异位词一定得到相同 key，于是无需两两比较，只需计算一次 key，再通过哈希表平均 O(1) 定位对应分组。",
+        complexity: "时间 O(nk log k) · 空间 O(nk)",
+      },
+      code: `from collections import defaultdict
+from typing import List
+
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        groups = defaultdict(list)
+
+        for s in strs:
+            key = "".join(sorted(s))
+            groups[key].append(s)
+
+        return list(groups.values())`,
+      codeTitle: "排序身份证 + 哈希分桶",
+      syntaxNote:
+        "sorted(s) 返回字符列表，因此要用 \"\".join(...) 拼回字符串；defaultdict(list) 会在第一次访问新 key 时自动创建空列表。",
+      takeaways: [
+        {
+          title: "分组题先设计身份证。",
+          detail:
+            "当题目要求把同类元素归组，先寻找一种标准表示：同类得到相同 key，不同类得到不同 key。",
+        },
+        {
+          title: "消灭两两比较。",
+          detail:
+            "不要让每个单词反复寻找同类；让它独立计算一次 key，再直接定位到对应桶。",
+        },
+        {
+          title: "顺序无关不等于次数无关。",
+          detail:
+            "set 会丢掉字符出现次数，可能把 abb 和 ab 错分到一起；排序或完整频次统计才能保留组成信息。",
+        },
+        {
+          title: "key 负责定位，原值负责输出。",
+          detail:
+            "排序结果只用作字典 key，真正追加到列表中的仍应是原始字符串 s。若字符集固定为 26 个小写字母，也可用频次数组转成 tuple，将时间优化为 O(nk)。",
+        },
+      ],
+    },
   },
   {
     id: "070",
